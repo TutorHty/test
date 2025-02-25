@@ -64,6 +64,7 @@
         <div class="btn-group">
             <button id="truthBtn">抽取真心话</button>
             <button id="dareBtn">抽取大冒险</button>
+            <button id="resetBtn" style="background: #666; color: white;">重置进度</button>
         </div>
         <div id="result"></div>
         <div class="counter">
@@ -77,6 +78,41 @@
     </div>
 
     <script>
+            // 在JavaScript部分添加重置函数和事件监听
+        function resetProgress() {
+            if(confirm('确定要重置所有游戏进度吗？')) {
+                // 清除本地存储
+                localStorage.removeItem('usedTruth');
+                localStorage.removeItem('usedDare');
+                
+                // 重置内存状态
+                used.truth = new Set();
+                used.dare = new Set();
+                
+                // 更新显示
+                updateCounter();
+                document.getElementById('result').innerHTML = '进度已重置！';
+            }
+        }
+    
+        // 添加事件监听
+        document.getElementById('resetBtn').addEventListener('click', resetProgress);
+    
+        // 更新样式使按钮更协调
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #resetBtn {
+                background: #666 !important;
+                font-size: 16px !important;
+                padding: 12px 25px !important;
+            }
+            #resetBtn:hover {
+                transform: scale(0.98) !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+
         // 题库数据
         const questions = {
             truth: [
