@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>破冰盲盒 - 大学新生破冰游戏</title>
+    <style>
+        :root {
+            --primary-color: #FF6B6B;
+            --secondary-color: #4ECDC4;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #F8F9FA;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .btn-group {
+            display: grid;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #truthBtn {
+            background: var(--primary-color);
+            color: white;
+        }
+        #dareBtn {
+            background: var(--secondary-color);
+            color: white;
+        }
+        #result {
+            min-height: 120px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .counter {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+        .qr-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 卓越班破冰盲盒 🎲</h1>
+        <div class="btn-group">
+            <button id="truthBtn">抽取真心话</button>
+            <button id="dareBtn">抽取大冒险</button>
+        </div>
+        <div id="result"></div>
+        <div class="counter">
+            <span id="remaining">剩余题目：真心话50 / 大冒险50</span>
+        </div>
+        <div class="qr-section">
+            <h3>📱 扫码分享游戏</h3>
+            <!-- 替换成实际二维码图片 -->
+            <img src="qrcode-placeholder.png" alt="游戏二维码" width="150">
+        </div>
+    </div>
+
+    <script>
+        // 题库数据
+        const questions = {
+            truth: [
+            "你做过最叛逆的事情是什么？",
+            "研究生期间最想完成的一件事情",
+            "用三个词形容自己的大学生活",
+            "手机相册第7张照片有什么故事？（若不方便，可任选一张分享）",
+            "最想拥有哪种超能力及原因",
+            "最近一次哭是什么时候？",
+            "最近单曲循环的歌曲是什么？",
+            "最想和哪个历史人物喝奶茶？",
+            "分享最近一次笑到肚子疼的经历",
+            "收到过最特别的礼物是什么？",
+            "说一个想尝试但不敢做的事",
+            "大学最遗憾的事情",
+            "最不能接受的食物搭配" ,
+            "理想型最关键的3个特质",
+            "如果只剩24小时会做什么？",
+            "如果变成异性会先做什么？",
+            "突然获得100万会怎么花？",
+            "穿越回高考前会对自己说什么？",
+            "如果专业能重选会学什么？",
+            "拥有隐身术会用来做什么？",
+            "喜欢be还是he",
+            "被困孤岛最想带的三样东西？",
+            "最喜欢的一部电影或电视剧",
+            "第一次逃课的经历",
+            "保留最久的旧物是什么？",
+            "青春期做过最非主流的事",
+            "小学同学记得最清楚的人",
+            "最想感谢的老师及原因",
+            "小时候相信过哪些谣言？",
+            "最想吐槽学校哪个设计？",
+            "最想吐槽自己专业什么？",
+            "最想吐槽哪项奇葩的校园规定",
+            "最想改进宿舍的哪个部分？",
+            "为什么选择师范专业",
+            "说出目前最大的愿望",
+            "给新生的一条防坑建议",
+            "毕业后想工作的城市",
+            "最喜欢的一本书",
+            ],
+            dare: [
+            "用方言朗诵《静夜思》",
+            "模仿经典影视剧中的经典桥段",
+            "表演痛苦吃到柠檬的表情包",
+            "用三种语气说朕知道了",
+            "模仿某一老师的经典口头禅",
+            "用肢体比划成语让大家猜",
+            "找1个同学模仿表情包合照",
+            "收集3个陌生同学的签名祝福",
+            "对窗外大喊一声专业口号",
+            "给好朋友发我要转专业看回复",
+            "用五种方言说你好",
+            "单脚转圈后走直线",
+            "用非惯用手写自己名字",
+            "闭眼原地踏步30秒",
+            "用书当托盘走模特步",
+            "连续说10个成语不重复",
+            "不用手把纸巾吹到指定位置",
+            "用衣服当披风摆超级英雄pose",
+            "学一种动物叫",
+            "倒着读绕口令三遍",
+            "用书包当婴儿哄睡",
+            "用粉笔画自画像",
+            "指挥小组完成网红拍照姿势拍照",
+            "用肢体连成指定字母",
+
+            ]
+        };
+
+        // 状态管理
+        let used = {
+            truth: new Set(),
+            dare: new Set()
+        };
+
+        // 初始化本地存储
+        function initStorage() {
+            if(localStorage.getItem('usedTruth')) {
+                used.truth = new Set(JSON.parse(localStorage.getItem('usedTruth')));
+            }
+            if(localStorage.getItem('usedDare')) {
+                used.dare = new Set(JSON.parse(localStorage.getItem('usedDare')));
+            }
+            updateCounter();
+        }
+
+        // 随机选题逻辑
+        function getQuestion(type) {
+            const available = questions[type].filter((_, index) => !used[type].has(index));
+            
+            if(available.length === 0) {
+                return {text: "🎉 该类型题目已全部抽完！", index: -1};
+            }
+
+            const randomIndex = Math.floor(Math.random() * available.length);
+            const originalIndex = questions[type].indexOf(available[randomIndex]);
+            
+            used[type].add(originalIndex);
+            localStorage.setItem(`used${type.charAt(0).toUpperCase() + type.slice(1)}`, 
+                JSON.stringify(Array.from(used[type])));
+            
+            updateCounter();
+            return {text: available[randomIndex], index: originalIndex};
+        }
+
+        // 更新剩余题目显示
+        function updateCounter() {
+            const truthRemaining = questions.truth.length - used.truth.size;
+            const dareRemaining = questions.dare.length - used.dare.size;
+            document.getElementById('remaining').textContent = 
+                `剩余题目：真心话${truthRemaining} / 大冒险${dareRemaining}`;
+        }
+
+        // 事件监听
+        document.getElementById('truthBtn').addEventListener('click', () => {
+            const result = getQuestion('truth');
+            displayResult(result.text, '真心话');
+        });
+
+        document.getElementById('dareBtn').addEventListener('click', () => {
+            const result = getQuestion('dare');
+            displayResult(result.text, '大冒险');
+        });
+
+        // 显示结果
+        function displayResult(text, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="type-tag">${type}</div>
+                <div class="content">${text}</div>
+            `;
+        }
+
+        // 初始化
+        initStorage();
+    </script>
+</body>
+</html>
